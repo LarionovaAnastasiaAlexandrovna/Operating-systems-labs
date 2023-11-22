@@ -15,16 +15,16 @@ void CloseAllHandlesR(HANDLE& hMutex, HANDLE& hSemaphoreForReceiver,
 }
 
 int main() {
-    char bin[100];  
+    char bin_file[100];  
     int size, n;
     std::cout << "Enter name of binary file: "; 
-    std::cin >> bin;
+    std::cin >> bin_file;
     std::cout << "\nEnter number of notes: ";
     std::cin >> size;
     std::cout << "\nEnter quantity of sender processes: ";
     std::cin >> n;
     std::ifstream fin;
-    std::ofstream fout(bin, std::ios::binary | std::ios::out | std::ios::trunc);
+    std::ofstream fout(bin_file, std::ios::binary | std::ios::out | std::ios::trunc);
     fout.close();
     HANDLE hMutex, hSemaphoreForReceiver, hSemaphoreForSender, hSemaphoreForConcoles;
     HANDLE* hEvent = new HANDLE[n];
@@ -39,7 +39,7 @@ int main() {
 
     char for_senders[100];
     for (int i = 0; i < n; i++) {
-        wsprintfA(for_senders, "Sender.exe %s %d %d", bin, i, size);
+        wsprintfA(for_senders, "Sender.exe %s %d %d", bin_file, i, size);
         hEvent[i] = CreateEvent(NULL, TRUE, FALSE, std::to_wstring(i).c_str());
         ZeroMemory(&si[i], sizeof(STARTUPINFO));
         si[i].cb = sizeof(STARTUPINFO);
@@ -48,18 +48,24 @@ int main() {
     }
     WaitForMultipleObjects(n, hEvent, TRUE, INFINITE);
 
-    int number, size_;
+    int size_messages;
     char message[20];
+    char choice;
     char* str;
-    while (true) {
-        std::cout << "enter '1' to read message or '2' to interrupt work: "; std::cin >> number;
-        if (number == 1) {
-            fin.open(bin, std::ios::binary | std::ios::in);
+    while (true) 
+    {
+        std::cout << "enter 'R' on the console to read the message, or enter 'S' to stop working: "; 
+        std::cin >> choice;
+        if (choice == 'r' || choice == 'R') 
+        {
+            fin.open(bin_file, std::ios::binary | std::ios::in);
             fin.seekg(0, std::ios::end);
-            size_ = fin.tellg();
-            if (!size_) {
+            size_messages = fin.tellg();
+            if (!size_messages) 
+            {
                 fin.close();
-                if (!ReleaseSemaphore(hSemaphoreForConcoles, 1, NULL)) {
+                if (!ReleaseSemaphore(hSemaphoreForConcoles, 1, NULL)) 
+                {
                     CloseAllHandlesR(hMutex, hSemaphoreForReceiver,
                         hSemaphoreForSender, hSemaphoreForConcoles, hEvent);
                     CloseHandle((*pi).hThread);
@@ -75,18 +81,19 @@ int main() {
             fin.read(reinterpret_cast<char*>(&message), sizeof(char[20]));
             std::cout << message << "\n";
 
-            str = new char[size_ - 20];
-            fin.read(str, size_ - 20);
+            str = new char[size_messages - 20];
+            fin.read(str, size_messages - 20);
             fin.close();
-            fout.open(bin, std::ios::binary | std::ios::out);
-            fout.write(str, size_ - 20);
+            fout.open(bin_file, std::ios::binary | std::ios::out);
+            fout.write(str, size_messages - 20);
             fout.close();
             delete str;
 
             WaitForSingleObject(hSemaphoreForReceiver, INFINITE);
             ReleaseSemaphore(hSemaphoreForSender, 1, NULL);
         }
-        else if (number == 2) {
+        else if (choice == 'S' || choice == 's') 
+        {
             ReleaseSemaphore(hSemaphoreForConcoles, 1, NULL);
             CloseAllHandlesR(hMutex, hSemaphoreForReceiver,
                 hSemaphoreForSender, hSemaphoreForConcoles, hEvent);
