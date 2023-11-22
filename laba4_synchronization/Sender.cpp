@@ -19,10 +19,8 @@ int main(int argc, char* argv[])
 {
     std::ofstream os;
     std::ifstream is;
-    HANDLE hMutex, hSemaphoreForReceiver, hSemaphoreForSender, hSemaphoreForConcoles;
-
-    HANDLE hEvent;
-
+    HANDLE hMutex, hSemaphoreForReceiver, hSemaphoreForSender, hSemaphoreForConcoles, hEvent;
+    
     hMutex = OpenMutex(SYNCHRONIZE, FALSE, L"mutex"); 
     hSemaphoreForReceiver = OpenSemaphore(SEMAPHORE_ALL_ACCESS, FALSE, L"hSemaphoreForReceiver");
     hSemaphoreForSender = OpenSemaphore(SEMAPHORE_ALL_ACCESS, FALSE, L"hSemaphoreForSender");
@@ -31,17 +29,22 @@ int main(int argc, char* argv[])
 
     SetEvent(hEvent);
 
-    int number, size_;
+    int size_;
+    char choice[2];
     char message[20];
     while (true) {
-        std::cout << "enter '1' to send message or '2' to interrupt work: "; std::cin >> number;
-        if (number == 1) {
+        std::cout << "enter 'S' on the console to send the message, or enter 'ST' to stop working: "; 
+        std::cin >> choice;
+        if (choice == 's' || choice == 'S') 
+        {
             is.open(argv[1], std::ios::binary | std::ios::in);
             is.seekg(0, std::ios::end);
             size_ = is.tellg();
             is.close();
-            if (size_ == atoi(argv[3]) * 20) {
-                if (!ReleaseSemaphore(hSemaphoreForConcoles, 1, NULL)) {
+            if (size_ == atoi(argv[3]) * 20) 
+            {
+                if (!ReleaseSemaphore(hSemaphoreForConcoles, 1, NULL)) 
+                {
                     CloseAllHandlesS(hMutex, hSemaphoreForReceiver,
                         hSemaphoreForSender, hSemaphoreForConcoles, hEvent);
                     ExitProcess(0);
@@ -52,14 +55,16 @@ int main(int argc, char* argv[])
                 continue;
             }
             os.open(argv[1], std::ios::binary | std::ios::in | std::ios::app);
-            std::cout << "enter message: "; std::cin >> message;
+            std::cout << "enter message: "; 
+            std::cin >> message;
             os.write(reinterpret_cast<const char*>(&message), sizeof(char[20]));
             os.close();
 
             ReleaseSemaphore(hSemaphoreForReceiver, 1, NULL);
             WaitForSingleObject(hSemaphoreForSender, INFINITE);
         }
-        else if (number == 2) {
+        else if (choice == 'st' || choice == 'St' || choice == 'sT' || choice == 'ST') 
+        {
             ReleaseSemaphore(hSemaphoreForConcoles, 1, NULL);
             CloseAllHandlesS(hMutex, hSemaphoreForReceiver,
                 hSemaphoreForSender, hSemaphoreForConcoles, hEvent);
