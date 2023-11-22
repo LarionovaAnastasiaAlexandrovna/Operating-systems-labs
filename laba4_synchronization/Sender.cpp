@@ -24,16 +24,16 @@ int main(int argc, char* argv[])
     hMutex = OpenMutex(SYNCHRONIZE, FALSE, L"mutex"); 
     hSemaphoreForReceiver = OpenSemaphore(SEMAPHORE_ALL_ACCESS, FALSE, L"hSemaphoreForReceiver");
     hSemaphoreForSender = OpenSemaphore(SEMAPHORE_ALL_ACCESS, FALSE, L"hSemaphoreForSender");
-    hSemaphoreForConcoles = OpenSemaphore(SEMAPHORE_ALL_ACCESS, FALSE, L"hSemaphoreForConcoles.");
+    hSemaphoreForConcoles = OpenSemaphore(SEMAPHORE_ALL_ACCESS, FALSE, L"hSemaphoreForConcoles"); //
     hEvent = OpenEvent(EVENT_ALL_ACCESS, FALSE, std::to_wstring(atoi(argv[2])).c_str());
 
     SetEvent(hEvent);
 
     int size_;
-    char choice[2];
+    char choice;
     char message[20];
     while (true) {
-        std::cout << "enter 'S' on the console to send the message, or enter 'ST' to stop working: "; 
+        std::cout << "enter 'S' on the console to send the message, or enter 'T' to stop working: "; 
         std::cin >> choice;
         if (choice == 's' || choice == 'S') 
         {
@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
             ReleaseSemaphore(hSemaphoreForReceiver, 1, NULL);
             WaitForSingleObject(hSemaphoreForSender, INFINITE);
         }
-        else if (choice == 'st' || choice == 'St' || choice == 'sT' || choice == 'ST') 
+        else if (choice == 't' || choice == 'T') 
         {
             ReleaseSemaphore(hSemaphoreForConcoles, 1, NULL);
             CloseAllHandlesS(hMutex, hSemaphoreForReceiver,
