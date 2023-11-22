@@ -4,10 +4,9 @@
 #include <string>
 #include <conio.h>
 
-void CloseAllHandlesS(HANDLE& hMutex, HANDLE& hSemaphoreForReceiver,
-    HANDLE& hSemaphoreForSender, HANDLE& hSemaphoreForConcoles, HANDLE hEvent)
+void CloseAllHandlesS( HANDLE& hSemaphoreForReceiver,
+    HANDLE& hSemaphoreForSender, HANDLE& hSemaphoreForConcoles, HANDLE& hEvent)
 {
-    CloseHandle(hMutex);
     CloseHandle(hSemaphoreForReceiver);
     CloseHandle(hSemaphoreForSender);
     CloseHandle(hSemaphoreForConcoles);
@@ -19,9 +18,8 @@ int main(int argc, char* argv[])
 {
     std::ofstream os;
     std::ifstream is;
-    HANDLE hMutex, hSemaphoreForReceiver, hSemaphoreForSender, hSemaphoreForConcoles, hEvent;
-    
-    hMutex = OpenMutex(SYNCHRONIZE, FALSE, L"mutex"); 
+    HANDLE hSemaphoreForReceiver, hSemaphoreForSender, hSemaphoreForConcoles, hEvent;
+
     hSemaphoreForReceiver = OpenSemaphore(SEMAPHORE_ALL_ACCESS, FALSE, L"hSemaphoreForReceiver");
     hSemaphoreForSender = OpenSemaphore(SEMAPHORE_ALL_ACCESS, FALSE, L"hSemaphoreForSender");
     hSemaphoreForConcoles = OpenSemaphore(SEMAPHORE_ALL_ACCESS, FALSE, L"hSemaphoreForConcoles"); //
@@ -33,19 +31,19 @@ int main(int argc, char* argv[])
     char choice;
     char message[20];
     while (true) {
-        std::cout << "enter 'S' on the console to send the message, or enter 'T' to stop working: "; 
+        std::cout << "enter 'S' on the console to send the message, or enter 'T' to stop working: ";
         std::cin >> choice;
-        if (choice == 's' || choice == 'S') 
+        if (choice == 's' || choice == 'S')
         {
             is.open(argv[1], std::ios::binary | std::ios::in);
             is.seekg(0, std::ios::end);
             size_ = is.tellg();
             is.close();
-            if (size_ == atoi(argv[3]) * 20) 
+            if (size_ == atoi(argv[3]) * 20)
             {
-                if (!ReleaseSemaphore(hSemaphoreForConcoles, 1, NULL)) 
+                if (!ReleaseSemaphore(hSemaphoreForConcoles, 1, NULL))
                 {
-                    CloseAllHandlesS(hMutex, hSemaphoreForReceiver,
+                    CloseAllHandlesS(hSemaphoreForReceiver,
                         hSemaphoreForSender, hSemaphoreForConcoles, hEvent);
                     ExitProcess(0);
                 }
@@ -55,7 +53,7 @@ int main(int argc, char* argv[])
                 continue;
             }
             os.open(argv[1], std::ios::binary | std::ios::in | std::ios::app);
-            std::cout << "enter message: "; 
+            std::cout << "enter message: ";
             std::cin >> message;
             os.write(reinterpret_cast<const char*>(&message), sizeof(char[20]));
             os.close();
@@ -63,10 +61,10 @@ int main(int argc, char* argv[])
             ReleaseSemaphore(hSemaphoreForReceiver, 1, NULL);
             WaitForSingleObject(hSemaphoreForSender, INFINITE);
         }
-        else if (choice == 't' || choice == 'T') 
+        else if (choice == 't' || choice == 'T')
         {
             ReleaseSemaphore(hSemaphoreForConcoles, 1, NULL);
-            CloseAllHandlesS(hMutex, hSemaphoreForReceiver,
+            CloseAllHandlesS( hSemaphoreForReceiver,
                 hSemaphoreForSender, hSemaphoreForConcoles, hEvent);
             ExitProcess(0);
         }
